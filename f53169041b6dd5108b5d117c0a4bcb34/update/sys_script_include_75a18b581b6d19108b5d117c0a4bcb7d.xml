@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_dila_hours_repor.CreateExcelReport</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>CreateExcelReport</name>
+        <script><![CDATA[var CreateExcelReport = Class.create();
+CreateExcelReport.prototype = {
+    initialize: function() {},
+	
+	generateReportToExistRecord: function(query,project,record){			
+		var cellHeaderStyle = 'style="border: 1px solid #02489E; background-color: #F0F8FF"';		
+		var cellBorder = 'style="border: 1px solid"';
+
+		var empty = '';
+		var dayIndex = 1,
+			lastDayIndex = 0,
+			numberOfDaysOnCurrentMonth;
+		var user = '',
+			company = '',
+			projectHeader = '',			
+			dayNumber = '',
+			monthNumber = '',
+			firstDay = '',
+			match = false,
+			totalTime = '',
+			totalDuration = '00:00:00',
+			dateIndex = '',
+			lastDay = '',
+			rowSpan = 1,
+			yearNumber = '';
+		var rows = " ";
+		if (project == ' '){
+			projectHeader = 'Dicomano';
+		}
+		else{
+			projectHeader = project;
+		}
+
+		var gr = new GlideRecord("u_hours_report");
+		gr.orderBy('u_day');
+		gr.orderBy('u_start_time');
+		gr.addEncodedQuery(query);
+		gr.query();
+		while (gr.next()) {			
+			match = false;
+
+			if (user == '') {
+				user = gr.u_user.getDisplayValue();
+			}
+
+			dayNumber = this._getDay(gr.u_day);
+
+			if (monthNumber == '') {
+				monthNumber = this._getMonth(gr.u_day);
+			}
+			if (yearNumber == '') {
+				yearNumber = this._getYear(gr.u_day);
+			}			
+
+			if (dateIndex == '') {
+				var gd = new GlideDate();
+				var temp = yearNumber + "-" + monthNumber + "-" + "01";
+
+				gd.setValue(temp);
+				dateIndex = gd;
+
+
+
+				lastDay = new GlideDate();				
+				lastDay.setValue(temp);
+				lastDay.addDays(-1);
+
+			}			
+
+			numberOfDaysOnCurrentMonth = this._getDaysInMonth(monthNumber, yearNumber);
+
+
+			while (dayIndex <= dayNumber && match == false) {
+
+				if (dayIndex == dayNumber) {
+
+					totalDuration = this._calculateDurationNew(totalDuration, gr.u_duration_time.getDisplayValue());
+					var totalDurationDecimal = this._convertDurationToDecimalDuration(totalDuration);
+
+					if (lastDayIndex == dayIndex) {						   
+						var word = 'rowspan=' + rowSpan;
+						rowSpan++;
+						var newWord = 'rowspan=' + rowSpan;
+
+						var pat = new RegExp('(\\b' + word + '\\b)(?!.*\\b\\1\\b)', 'i');
+						rows = rows.replace(pat, newWord);										
+						
+						rows += '<tr><td ' + cellBorder + '>' + this._getDayOfWeek(gr.u_day.getDisplayValue()) + '</td>' + '<td ' + cellBorder + '>' + gr.u_start_time.getDisplayValue() + '</td>' + '<td ' + cellBorder + '>' + gr.u_end_time.getDisplayValue() + '</td>' + '<td ' + cellBorder + '>' + gr.u_duration_time.getDisplayValue() + '</td>' +  '<td ' + cellBorder + '>' + this._getComments(gr.u_comments.getDisplayValue(),projectHeader,gr.u_project.getDisplayValue())  + '</td>' + '</tr>';
+
+
+					}
+					else{
+						rowSpan = 1;
+
+
+						rows += '<tr><td rowspan=' + rowSpan + ' ' + cellBorder + '>' + dateIndex + '</td>' + '<td ' + cellBorder + '>' + this._getDayOfWeek(gr.u_day.getDisplayValue()) + '</td>' + '<td ' + cellBorder + '>' + gr.u_start_time.getDisplayValue() + '</td>' + '<td ' + cellBorder + '>' + gr.u_end_time.getDisplayValue() + '</td>' + '<td ' + cellBorder + '>' + gr.u_duration_time.getDisplayValue() + '</td>' + '<td ' + cellBorder + '>' + this._getComments(gr.u_comments.getDisplayValue(),projectHeader,gr.u_project.getDisplayValue()) + '</td>' + '</tr>';
+					}
+
+
+
+
+
+					lastDayIndex = dayIndex;
+					match = true;
+				} else {
+					if (lastDayIndex != dayIndex) {
+						
+						rows += '<tr><td ' + cellBorder + '>' + dateIndex + '</td>' + '<td ' + cellBorder + '>' + this._getDayOfWeek(dateIndex) + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td></tr>';
+						dateIndex.addDays(1);
+						dayIndex++;
+					} else {
+						dateIndex.addDays(1);
+						dayIndex++;
+					}
+
+				}
+
+
+			}
+
+		}
+		dayIndex++;
+		dateIndex.addDays(1);
+
+		while (dayIndex <= numberOfDaysOnCurrentMonth) {			
+			rows += '<tr><td  ' + cellBorder + '>' + dateIndex + '</td>' + '<td ' + cellBorder + '>' + this._getDayOfWeek(dateIndex) + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td></tr>';
+			dateIndex.addDays(1);
+			dayIndex++;
+		}
+		
+		rows += '<tr><td ' + cellHeaderStyle +  '>Total:</td>' + '<td ' + cellHeaderStyle +  '>' + empty + '</td>' + '<td ' + cellHeaderStyle +  '>' + empty + '</td>' + '<td ' + cellHeaderStyle +  '>' + empty + '</td>'  +  '<td ' + cellHeaderStyle +  '>' + totalDurationDecimal + '</td>' +  '<td ' + cellHeaderStyle +  '>' + empty + '</td>'   +  '</tr>';
+
+		table = '<table><tbody>' +
+
+			'<tr>' + empty + '</tr>' +
+
+			'<tr><td ' + cellHeaderStyle + '>Month:</td><td ' + cellHeaderStyle + '>' + monthNumber + '</td><td ' + cellHeaderStyle + '>Year:</td><td ' + cellHeaderStyle + '>' + yearNumber + '</td></tr>' +
+
+			'<tr>' + empty + '</tr>' +			
+
+			'<tr><td ' + cellHeaderStyle + '>User:</td><td ' + cellHeaderStyle + '>' + user + '</td><td ' + cellHeaderStyle + '>Project:</td><td ' + cellHeaderStyle + '>' + projectHeader + '</td></tr>' +
+
+			'<tr>' + empty + '</tr>' +
+			
+			'<tr><th ' + cellHeaderStyle + '>Date</th><th ' + cellHeaderStyle + '>Day</th><th ' + cellHeaderStyle + '>Start Time</th><th ' + cellHeaderStyle + '>End Time</th><th ' + cellHeaderStyle + '>Duration</th><th ' + cellHeaderStyle + '>Comments</th></tr>' +
+
+			rows +
+
+			'</tbody></table>';
+
+
+		generatedHTML = [
+			'<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">',
+			'<head>',
+			'<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Worksheet1</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->',
+			'</head>',
+			'<body>',
+			table,
+			'</body></html>'
+		].join('');
+
+		var gr2 = new GlideRecord('u_hours_report_excel_attachments');
+		att = new GlideSysAttachment();
+		gr2.get('sys_id',record);		
+		var attachment_sysID = att.write(gr2, project+user + monthNumber + yearNumber + '.xls', "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", generatedHTML);
+
+		return attachment_sysID;
+		
+	},
+
+
+	generateReport: function(query,project) {
+
+		var cellHeaderStyle = 'style="border: 1px solid #02489E; background-color: #F0F8FF"';		
+		var cellBorder = 'style="border: 1px solid"';
+
+		var empty = '';
+		var dayIndex = 1,
+			lastDayIndex = 0,
+			numberOfDaysOnCurrentMonth;
+		var user = '',
+			company = '',
+			projectHeader = '',			
+			dayNumber = '',
+			monthNumber = '',
+			firstDay = '',
+			match = false,
+			totalTime = '',
+			totalDuration = '00:00:00',
+			dateIndex = '',
+			lastDay = '',
+			rowSpan = 1,
+			yearNumber = '';
+		var rows = " ";
+		if (project == ' '){
+			projectHeader = 'Dicomano';
+		}
+		else{
+			projectHeader = project;
+		}
+
+		var gr = new GlideRecord("u_hours_report");
+		gr.orderBy('u_day');
+		gr.orderBy('u_start_time');
+		gr.addEncodedQuery(query);
+		gr.query();
+		while (gr.next()) {			
+			match = false;
+
+			if (user == '') {
+				user = gr.u_user.getDisplayValue();
+			}
+
+			dayNumber = this._getDay(gr.u_day);
+
+			if (monthNumber == '') {
+				monthNumber = this._getMonth(gr.u_day);
+			}
+			if (yearNumber == '') {
+				yearNumber = this._getYear(gr.u_day);
+			}			
+			
+			if (dateIndex == '') {
+				var gd = new GlideDate();
+				var temp = yearNumber + "-" + monthNumber + "-" + "01";
+
+				gd.setValue(temp);
+				dateIndex = gd;
+
+				lastDay = new GlideDate();				
+				lastDay.setValue(temp);
+				lastDay.addDays(-1);
+
+			}			
+
+			numberOfDaysOnCurrentMonth = this._getDaysInMonth(monthNumber, yearNumber);
+
+
+			while (dayIndex <= dayNumber && match == false) {
+
+				if (dayIndex == dayNumber) {
+					totalDuration = this._calculateDurationNew(totalDuration, gr.u_duration_time.getDisplayValue());
+					var totalDurationDecimal = this._convertDurationToDecimalDuration(totalDuration);
+
+					if (lastDayIndex == dayIndex) {						   
+						var word = 'rowspan=' + rowSpan;
+						rowSpan++;
+						var newWord = 'rowspan=' + rowSpan;
+
+						var pat = new RegExp('(\\b' + word + '\\b)(?!.*\\b\\1\\b)', 'i');
+						rows = rows.replace(pat, newWord);														
+						
+						rows += '<tr><td ' + cellBorder + '>' + this._getDayOfWeek(gr.u_day.getDisplayValue()) + '</td>' + '<td ' + cellBorder + '>' + gr.u_start_time.getDisplayValue() + '</td>' + '<td ' + cellBorder + '>' + gr.u_end_time.getDisplayValue() + '</td>' + '<td ' + cellBorder + '>' + gr.u_duration_time.getDisplayValue() + '</td>' +  '<td ' + cellBorder + '>' + this._getComments(gr.u_comments.getDisplayValue(),projectHeader,gr.u_project.getDisplayValue())  + '</td>' + '</tr>';
+
+
+					}
+					else{
+						rowSpan = 1;
+
+
+						rows += '<tr><td rowspan=' + rowSpan + ' ' + cellBorder + '>' + dateIndex + '</td>' + '<td ' + cellBorder + '>' + this._getDayOfWeek(gr.u_day.getDisplayValue()) + '</td>' + '<td ' + cellBorder + '>' + gr.u_start_time.getDisplayValue() + '</td>' + '<td ' + cellBorder + '>' + gr.u_end_time.getDisplayValue() + '</td>' + '<td ' + cellBorder + '>' + gr.u_duration_time.getDisplayValue() + '</td>' + '<td ' + cellBorder + '>' + this._getComments(gr.u_comments.getDisplayValue(),projectHeader,gr.u_project.getDisplayValue()) + '</td>' + '</tr>';
+					}
+
+
+
+
+
+					lastDayIndex = dayIndex;
+					match = true;
+				} else {
+					if (lastDayIndex != dayIndex) {						
+						rows += '<tr><td ' + cellBorder + '>' + dateIndex + '</td>' + '<td ' + cellBorder + '>' + this._getDayOfWeek(dateIndex) + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td></tr>';
+						dateIndex.addDays(1);
+						dayIndex++;
+					} else {
+						dateIndex.addDays(1);
+						dayIndex++;
+					}
+
+				}
+
+
+			}
+
+		}
+		dayIndex++;
+		dateIndex.addDays(1);
+
+		while (dayIndex <= numberOfDaysOnCurrentMonth) {			
+			rows += '<tr><td  ' + cellBorder + '>' + dateIndex + '</td>' + '<td ' + cellBorder + '>' + this._getDayOfWeek(dateIndex) + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td><td ' + cellBorder + '>' + empty + '</td></tr>';
+			dateIndex.addDays(1);
+			dayIndex++;
+		}
+
+		
+		rows += '<tr><td ' + cellHeaderStyle +  '>Total:</td>' + '<td ' + cellHeaderStyle +  '>' + empty + '</td>' + '<td ' + cellHeaderStyle +  '>' + empty + '</td>' + '<td ' + cellHeaderStyle +  '>' + empty + '</td>'  +  '<td ' + cellHeaderStyle +  '>' + totalDurationDecimal + '</td>' +  '<td ' + cellHeaderStyle +  '>' + empty + '</td>'   +  '</tr>';
+
+		table = '<table><tbody>' +
+
+			'<tr>' + empty + '</tr>' +
+
+			'<tr><td ' + cellHeaderStyle + '>Month:</td><td ' + cellHeaderStyle + '>' + monthNumber + '</td><td ' + cellHeaderStyle + '>Year:</td><td ' + cellHeaderStyle + '>' + yearNumber + '</td></tr>' +
+
+			'<tr>' + empty + '</tr>' +			
+
+			'<tr><td ' + cellHeaderStyle + '>User:</td><td ' + cellHeaderStyle + '>' + user + '</td><td ' + cellHeaderStyle + '>Project:</td><td ' + cellHeaderStyle + '>' + projectHeader + '</td></tr>' +
+
+			'<tr>' + empty + '</tr>' +
+			
+			'<tr><th ' + cellHeaderStyle + '>Date</th><th ' + cellHeaderStyle + '>Day</th><th ' + cellHeaderStyle + '>Start Time</th><th ' + cellHeaderStyle + '>End Time</th><th ' + cellHeaderStyle + '>Duration</th><th ' + cellHeaderStyle + '>Comments</th></tr>' +
+
+			rows +
+
+			'</tbody></table>';
+
+
+		generatedHTML = [
+			'<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">',
+			'<head>',
+			'<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Worksheet1</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->',
+			'</head>',
+			'<body>',
+			table,
+			'</body></html>'
+		].join('');
+
+		var gr2 = new GlideRecord('u_hours_report_excel_attachments'),
+			att = new GlideSysAttachment();
+
+		gr2.insert();
+		var attachment_sysID = att.write(gr2, project+user + monthNumber + yearNumber + '.xls', "csv", generatedHTML);
+
+		return attachment_sysID;
+	},
+	_getComments: function(comments,projectHeader,project){
+		var commentsOut = comments;
+		if (projectHeader == 'Dicomano'){						
+			if (project.indexOf('Dicomano') >=0 ){
+				commentsOut = project + ' ' + comments;
+			}
+			else{
+				commentsOut = '';
+			}
+		}
+		return commentsOut;
+	},
+	
+	_calculateDurationNew: function(time1,time2){		
+		var splitTime1= time1.split(':');
+		var hour1      = splitTime1[0];
+		var minute1    = splitTime1[1];
+		var second1    = splitTime1[2];
+
+		var splitTime2= time2.split(':');
+		var hour2      = splitTime2[0];
+		var minute2    = splitTime2[1];
+		var second2    = splitTime2[2];
+
+		var secondsObj = {};
+		secondsObj = this._calcSeconds(second1,second2);
+		var minutesObj = {};
+		minutesObj = this._calcMinutes(minute1,minute2);		
+
+		var seconds_total = secondsObj.totalSec;
+		var minutes_total = secondsObj.remainder + minutesObj.totalMin;		
+		var temp = parseInt(minutesObj.remainder, 10);
+		var hours_total   =  parseInt(hour1,10) + parseInt(hour2,10) + temp ;
+
+		return hours_total + ":" + minutes_total + ":" + seconds_total;
+
+
+	},
+	_convertDurationToDecimalDuration: function(time){ // 36:40:00 ==> 36.66
+		var splitTime= time.split(':');
+		var hours      = splitTime[0];
+		var minutes    = splitTime[1];
+		var seconds    = splitTime[2];
+
+		var decimalMinutes = minutes/60;				
+		var decimalDuration = parseInt(hours)  + decimalMinutes; 		
+		return decimalDuration;
+
+
+	},
+
+	_calcMinutes: function(min1,min2){
+		var minTotal =  parseInt(min1,10) + parseInt(min2,10);
+		var r = 0;
+		var obj = {};
+
+		if (minTotal >= 60){
+			r = 1;
+			minTotal = minTotal - 60;
+		}
+		obj.totalMin = minTotal;
+		obj.remainder = r;		 
+		return obj;
+	},
+
+	_calcSeconds: function(sec1,sec2){
+		var secTotal = parseInt(sec1,10) + parseInt(sec2,10);		
+		var r = 0;
+		var obj = {};
+
+		if (secTotal >= 60){		
+			r = 1;
+			secTotal = secTotal - 60;
+
+		}
+		obj.totalSec = secTotal;
+		obj.remainder = r;
+		return obj;
+	},
+
+	_calculateTotalTime: function(totalTime, newTime) {
+		return totalTime + newTime;
+	},
+
+	_getDaysInMonth: function(month, year) {
+		return new Date(year, month, 0).getDate();
+	},
+	_getDay: function(date) {
+		var gdt = new GlideDateTime(date);
+		var holdMonth = gdt.getDayOfMonthLocalTime();
+		return holdMonth;
+	},
+	_getDayOfWeek: function(date) {
+		var todayDateTime = new GlideDateTime(date);
+		var integerValForToday = todayDateTime.getDayOfWeekLocalTime();
+		var jsonObj = '{"1":"Monday","2":"Tuesday","3":"Wednesday","4":"Thursday","5":"Friday","6":"Saturday","7":"Sunday"}';
+		var parser = new JSONParser();
+		var parsedData = parser.parse(jsonObj);
+		var dayOfWeek = parsedData[integerValForToday];
+		return dayOfWeek;
+	},
+
+	_getMonth: function(date) {
+		var gdt = new GlideDateTime(date);
+		var holdMonth = gdt.getMonthLocalTime().toString();
+		if (holdMonth.length == 1) {
+			holdMonth = '0' + holdMonth;
+		}
+		return holdMonth;
+	},
+
+	_getYear: function(date) {
+		var gdt = new GlideDateTime(date);
+		var holdYear = gdt.getYearLocalTime();
+		return holdYear;
+	},
+
+    type: 'CreateExcelReport'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>gaia</sys_created_by>
+        <sys_created_on>2022-08-22 14:19:25</sys_created_on>
+        <sys_id>75a18b581b6d19108b5d117c0a4bcb7d</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>CreateExcelReport</sys_name>
+        <sys_package display_value="Hours report" source="x_dila_hours_repor">f53169041b6dd5108b5d117c0a4bcb34</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="Hours report">f53169041b6dd5108b5d117c0a4bcb34</sys_scope>
+        <sys_update_name>sys_script_include_75a18b581b6d19108b5d117c0a4bcb7d</sys_update_name>
+        <sys_updated_by>gaia</sys_updated_by>
+        <sys_updated_on>2022-08-22 19:21:33</sys_updated_on>
+    </sys_script_include>
+</record_update>

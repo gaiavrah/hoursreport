@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_dila_hours_repor.HoursReportUtils</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>HoursReportUtils</name>
+        <script><![CDATA[var HoursReportUtils = Class.create();
+HoursReportUtils.prototype = {
+    initialize: function() {
+    },
+	
+	closeMonthlyRecords: function(user,month,year){
+		var projectDisplayName = '';
+		var projectValue = '', monthValue = '' , yearValue = '' , userValue = '';
+		var reportQuery = "";
+		var si = new CreateExcel();
+		var attachment_sysID;
+		monthValue         = month;
+		yearValue          = year;
+		userValue          = user;
+
+		var startDate = "'" +  yearValue + "-" + monthValue + "-" + "01" + "'";		
+		var gdt2 = new GlideDateTime(yearValue + "-" + monthValue + "-" + "02");
+		var lastDate =  "'" +  yearValue + "-" + monthValue + "-" + gdt2.getDaysInMonth() + "'";		// last day of month
+		var dateString = "dayBETWEENjavascript:gs.dateGenerate(" + startDate + ", 'start')@javascript:gs.dateGenerate(" + lastDate + ",'end')" ;		
+		
+		this._closeGeneralRecord(user,month,year);   // close records on "hours_report_closed_general" table according user & month & year 
+		
+
+		
+		var gr = new GlideRecord('hours_report_excel_attachments');
+		gr.initialize();
+		gr.title = "Hours report - " + gs.getUserDisplayName() + " " + month + " " + year;
+		gr.insert();
+		
+		var projectsSysIDs = this._closeMonthlyRecords(user,month,year,gr.getUniqueValue()); // close records on "hours_report" table according user & month & year
+		
+		var projectsArr = projectsSysIDs.split(',');						
+		
+		for (var i=0 ; i < projectsArr.length-1 ; i++){
+			projectDisplayName = this._getProjectNameByProjecySysID(projectsArr[i]);
+			reportQuery = "project=" + projectsArr[i] + "^" + "user=" + userValue + "^" +  dateString;			
+			attachment_sysID =  si.generateReportToExistRecord(reportQuery,projectDisplayName,gr.getUniqueValue());
+		} 
+		projectDisplayName = 'Dicomano';
+		reportQuery = "user=" + userValue + "^" +  dateString;
+		attachment_sysID =  si.generateReportToExistRecord(reportQuery,projectDisplayName,gr.getUniqueValue());
+		gs.eventQueue('hours.report.send.attached.report', gr);
+
+		
+		return;		
+	},
+	_getProjectNameByProjecySysID: function(projectSysID){
+		var projectDisplayValue = '';
+		var rec = new GlideRecord("customer_project");
+		rec.get(projectSysID);
+
+		projectDisplayValue =  rec.short_description.getDisplayValue();
+		return projectDisplayValue;
+
+	},
+	updateProjectCompanyCodeOfHoursReportRecord:function(user,company_code,prev_company_code,date,duration){
+		this.insertCompanyCodetHoursReportRecord(user,company_code,date,duration);
+		this.insertCompanyCodetHoursReportRecord(user,prev_company_code,date,duration);
+	},
+	updateProjectGeneralOfHoursReportRecord:function(user,company_code,date,duration){
+		this.insertGeneralHourReportRecord(user,company_code,date,duration);
+	},	
+	updateDurationAndProjectOfGeneralHoursReportRecord: function(user,company_code,prev_company_code,date,duration){
+		this.insertGeneralHourReportRecord(user,company_code,date,duration);
+		this.insertGeneralHourReportRecord(user,prev_company_code,date,duration);
+	},
+	updateDurationOfGeneralHoursReportRecord: function(user,company_code,date,duration){
+		this.insertGeneralHourReportRecord(user,company_code,date,duration);
+	},
+
+	updateDurationOfCompanyCodeHoursReportRecord: function(user,company_code,date,duration){
+		this.insertCompanyCodetHoursReportRecord(user,company_code,date,duration);
+	},
+
+	updateDurationAndProjectOfCompanyCodeHoursReportRecord: function(user,company_code,prev_company_code,date,duration){
+		this.insertCompanyCodetHoursReportRecord(user,company_code,date,duration);
+		this.insertCompanyCodetHoursReportRecord(user,prev_company_code,date,duration);
+	},
+
+
+	deleteCompanyCodeHoursReportRecord: function(user,company_code,date,duration){
+		var gdt = new GlideDateTime(date);
+		var month_value = gdt.getMonthLocalTime().toString();			
+		var year_value  = gdt.getYearLocalTime().toString();
+		var query = "user=" + user + "^year=" + year_value +  "^month=" + month_value +  "^company_code=" + company_code;
+		var gr = new GlideRecord("hours_report_close_month");		
+		gr.addEncodedQuery(query);
+		gr.query();
+		if (gr.next()) {
+			var startDate = "'" +  year_value + "-" + month_value + "-" + "01" + "'";
+			var gdt2 = new GlideDateTime(year_value + "-" + month_value + "-" + "02");
+			var lastDate =  "'" +  year_value + "-" + month_value + "-" + gdt2.getDaysInMonth() + "'";		// last day of month
+			var dateString = "dayBETWEENjavascript:gs.dateGenerate(" + startDate + ", 'start')@javascript:gs.dateGenerate(" + lastDate + ",'end')" ;				
+			var rec_query = "project=" + company_code  + "^user=" + user + "^" +  dateString;
+			gr.total_hours_decimal = this._convertDurationToDecimalDuration(this.getDurationByQuery(rec_query,'hours_report'));			
+			gr.update();
+		}
+	},
+	deleteGeneralHoursReportRecord: function(user,company_code,date,duration){
+		var gdt = new GlideDateTime(date);
+		var month_value = gdt.getMonthLocalTime().toString();			
+		var year_value  = gdt.getYearLocalTime().toString();
+		var day_value = this._getDay(date);
+		var query = "user=" + user + "^year=" + year_value +  "^month=" + month_value;
+		var queryCountProjects = "user=" + user + "^year=" + year_value +  "^month=" + month_value;
+
+		var gr = new GlideRecord("hours_report_closed_general");
+		gr.addEncodedQuery(query);
+		gr.query();
+		if (gr.next()) {
+			var startDate = "'" +  year_value + "-" + month_value + "-" + "01" + "'";
+			var gdt2 = new GlideDateTime(year_value + "-" + month_value + "-" + "02");
+			var lastDate =  "'" +  year_value + "-" + month_value + "-" + gdt2.getDaysInMonth() + "'";		// last day of month
+			var dateString = "dayBETWEENjavascript:gs.dateGenerate(" + startDate + ", 'start')@javascript:gs.dateGenerate(" + lastDate + ",'end')" ;				
+			var rec_query = "user=" + user + "^" +  dateString;
+			gr.total_days = this.getCountReportedDaysByQuery(rec_query,'hours_report');
+			gr.total_hours_decimal = this._convertDurationToDecimalDuration(this.getDurationByQuery(rec_query,'hours_report'));
+			gr.total_projects = this.getCountReportedProjectsByQuery(rec_query,'hours_report');
+
+			gr.update();
+		}
+	},
+
+	insertCompanyCodetHoursReportRecord: function(user,company_code,date,duration){
+		var gdt = new GlideDateTime(date);
+		var month_value = gdt.getMonthLocalTime().toString();			
+		var year_value  = gdt.getYearLocalTime().toString();
+		var query = "user=" + user + "^year=" + year_value +  "^month=" + month_value +  "^company_code=" + company_code;
+		var gr = new GlideRecord("hours_report_close_month");		
+		gr.addEncodedQuery(query);
+		gr.query();
+		if (gr.next()) {
+			var startDate = "'" +  year_value + "-" + month_value + "-" + "01" + "'";
+			var gdt2 = new GlideDateTime(year_value + "-" + month_value + "-" + "02");
+			var lastDate =  "'" +  year_value + "-" + month_value + "-" + gdt2.getDaysInMonth() + "'";		// last day of month
+			var dateString = "dayBETWEENjavascript:gs.dateGenerate(" + startDate + ", 'start')@javascript:gs.dateGenerate(" + lastDate + ",'end')" ;				
+			var rec_query = "project=" + company_code  + "^user=" + user + "^" +  dateString;
+			gr.total_hours_decimal = this._convertDurationToDecimalDuration(this.getDurationByQuery(rec_query,'hours_report'));			
+			gr.update();
+		}
+		else{
+			gr.initialize();
+			gr.user = user;
+			gr.year = year_value;
+			gr.month = month_value;
+			gr.company_code = company_code;
+			gr.total_hours_decimal = this._convertDurationToDecimalDuration(duration); 
+			gr.insert();
+		}
+	},
+
+	insertGeneralHourReportRecord: function(user,company_code,date,duration){
+		var gdt = new GlideDateTime(date);
+		var month_value = gdt.getMonthLocalTime().toString();			
+		var year_value  = gdt.getYearLocalTime().toString();
+		var day_value = this._getDay(date);
+		var query = "user=" + user + "^year=" + year_value +  "^month=" + month_value;
+		var queryCountProjects = "user=" + user + "^year=" + year_value +  "^month=" + month_value;
+
+		var gr = new GlideRecord("hours_report_closed_general");
+		gr.addEncodedQuery(query);
+		gr.query();
+		if (gr.next()) {
+			var startDate = "'" +  year_value + "-" + month_value + "-" + "01" + "'";
+			var gdt2 = new GlideDateTime(year_value + "-" + month_value + "-" + "02");
+			var lastDate =  "'" +  year_value + "-" + month_value + "-" + gdt2.getDaysInMonth() + "'";		// last day of month
+			var dateString = "dayBETWEENjavascript:gs.dateGenerate(" + startDate + ", 'start')@javascript:gs.dateGenerate(" + lastDate + ",'end')" ;				
+			var rec_query = "user=" + user + "^" +  dateString;
+			gr.total_days = this.getCountReportedDaysByQuery(rec_query,'hours_report');
+			gr.total_hours_decimal = this._convertDurationToDecimalDuration(this.getDurationByQuery(rec_query,'hours_report'));
+			gr.total_projects = this.getCountReportedProjectsByQuery(rec_query,'hours_report');
+
+			gr.update();
+		}
+		else{
+			gr.initialize();
+			gr.user = user;
+			gr.year = year_value;
+			gr.month = month_value;			
+			gr.total_hours_decimal = this._convertDurationToDecimalDuration(duration); 
+			gr.total_days = 1;
+			gr.total_projects = 1;
+			gr.insert();
+		}
+
+
+	},
+
+	createCompanyCodeHourReportRecord: function(user,company_code,date,duration){
+		var gdt = new GlideDateTime(date);
+		var month_value = gdt.getMonthLocalTime().toString();			
+		var year_value  = gdt.getYearLocalTime().toString();
+		var query = "user=" + user + "^year=" + year_value +  "^month=" + month_value +  "^company_code=" + company_code;
+		var gr = new GlideRecord("hours_report_close_month");		
+		gr.addEncodedQuery(query);
+		gr.query();
+		if (gr.next()) {
+			var startDate = "'" +  year_value + "-" + month_value + "-" + "01" + "'";
+			var gdt2 = new GlideDateTime(year_value + "-" + month_value + "-" + "02");
+			var lastDate =  "'" +  year_value + "-" + month_value + "-" + gdt2.getDaysInMonth() + "'";		// last day of month
+			var dateString = "dayBETWEENjavascript:gs.dateGenerate(" + startDate + ", 'start')@javascript:gs.dateGenerate(" + lastDate + ",'end')" ;				
+			var rec_query = "project=" + company_code  + "^user=" + user + "^" +  dateString;
+			gr.total_hours_decimal = this._convertDurationToDecimalDuration(this.getDurationByQuery(rec_query,'hours_report'));			
+			gr.update();
+		}
+		else{
+			gr.initialize();
+			gr.user = user;
+			gr.year = year_value;
+			gr.month = month_value;
+			gr.company_code = company_code;
+			gr.total_hours_decimal = this._convertDurationToDecimalDuration(duration); 
+			gr.insert();
+		}
+
+	},
+	getCountReportedDaysByQuery: function(query, table_name){
+		var daysCount = 0;
+		var agg = new GlideAggregate(table_name);
+		agg.addAggregate('COUNT','day');
+		agg.addEncodedQuery(query);
+		agg.query();
+
+		while (agg.next()){
+			daysCount++;
+		}
+		return daysCount;
+
+	},
+	getCountReportedProjectsByQuery: function(query, table_name){
+		var projectsCount = 0;
+		var agg = new GlideAggregate(table_name);
+		agg.addAggregate('COUNT','project');
+		agg.addEncodedQuery(query);
+		agg.query();
+
+		while (agg.next()){
+			projectsCount++;
+		}
+		return projectsCount;
+	},
+
+	getDurationByQuery: function(query, table_name){
+		var totalDuration = '00:00:00';
+		var gr = new GlideRecord(table_name);
+		gr.addEncodedQuery(query);
+		gr.query();
+		while (gr.next()) {
+			totalDuration = this._calculateDuration(totalDuration, gr.duration_time.getDisplayValue());
+		}
+		return totalDuration;
+
+	},
+	_closeGeneralRecord: function(current_user,month_value,year_value){		
+		var query = "user=" + current_user +  "^month=" + month_value +  "^year=" + year_value;
+		var gr = new GlideRecord("hours_report_closed_general");		
+		gr.addEncodedQuery(query);
+		gr.query();
+		if (gr.next()) {
+			gr.month_closed = true;
+			gr.update();
+		}
+		return;
+	},
+
+	_closeMonthlyRecords: function(current_user,month_value,year_value,attachment_out_record){
+
+		var projects = '';
+		var startDate = "'" +  year_value + "-" + month_value + "-" + "01" + "'";
+		var gdt2 = new GlideDateTime(year_value + "-" + month_value + "-" + "02");
+		var lastDate =  "'" +  year_value + "-" + month_value + "-" + gdt2.getDaysInMonth() + "'";		// last day of month
+		var dateString = "dayBETWEENjavascript:gs.dateGenerate(" + startDate + ", 'start')@javascript:gs.dateGenerate(" + lastDate + ",'end')" ;				
+		var monthly_hours_query = "user=" + current_user + "^" +  dateString;
+
+		var gr = new GlideRecord("hours_report");
+		gr.addEncodedQuery(monthly_hours_query);
+		gr.query();
+		while (gr.next()) {
+			if (projects.indexOf(gr.project) < 0 && gr.project.getDisplayValue().indexOf('Dicomano') < 0 ){
+				projects += gr.project + ",";
+			}
+			this._checkForAttachment(gr.getUniqueValue(),attachment_out_record);
+			gr.record_closed = true;
+			gr.update();
+		}
+		return projects;
+	},
+	
+	_checkForAttachment: function(recordSysID,attachment_out_record){
+		var attachmentGlide = new GlideSysAttachment();
+		var gr = new GlideRecord("sys_attachment");
+		gr.addEncodedQuery("table_name=hours_report^table_sys_id=" + recordSysID); 
+		gr.query();
+		if (gr.next()) {
+			attachmentGlide.copy('hours_report', recordSysID, 'hours_report_excel_attachments', attachment_out_record);
+		}
+		return;
+	},
+
+	_calculateDuration: function(time1,time2){		
+		var splitTime1= time1.split(':');
+		var hour1      = splitTime1[0];
+		var minute1    = splitTime1[1];
+		var second1    = splitTime1[2];
+
+		var splitTime2= time2.split(':');
+		var hour2      = splitTime2[0];
+		var minute2    = splitTime2[1];
+		var second2    = splitTime2[2];
+
+		var secondsObj = {};
+		secondsObj = this._calcSeconds(second1,second2);
+		var minutesObj = {};
+		minutesObj = this._calcMinutes(minute1,minute2);		
+
+		var seconds_total = secondsObj.totalSec;
+		var minutes_total = secondsObj.remainder + minutesObj.totalMin;		
+		var temp = parseInt(minutesObj.remainder, 10);
+		var hours_total   =  parseInt(hour1,10) + parseInt(hour2,10) + temp ;
+
+		return hours_total + ":" + minutes_total + ":" + seconds_total;
+
+
+	},
+
+
+	createMonthlyCloseRecords: function(arr,user,year,month){ // create records on 'hours_report_close_month' table
+		for (var i=0 ; i < arr.length ; i++){
+			var gr = new GlideRecord("hours_report_close_month");
+			gr.initialize();
+			gr.user = user;
+			gr.company_code = arr[i].project;						
+			var decimalDuration = this._convertDurationToDecimalDuration(arr[i].duration);
+			gr.total_hours_decimal  = decimalDuration;
+			gr.year = year;
+			gr.month = month;
+			gr.insert();
+
+
+		}
+	},
+
+	_pushRecord: function(array,recordProject,recordDuration){
+		var si = new CreateExcel();
+		var obj = {};
+		var duration = new GlideDuration();
+		var project_exist = false;
+		var l = array.length;
+		if (array.length == 0){
+			obj = {
+				project: recordProject,
+				duration: recordDuration,
+				index:0
+			};
+
+		}
+		else{
+			project_exist = false;
+			for (var i=0 ; i < array.length ; i++){
+				if (array[i].project == recordProject){					
+					duration = si._calculateDurationNew(array[i].duration, recordDuration);
+					obj = {
+						project: recordProject,
+						duration: duration ,
+						index: i
+					};
+					project_exist = true;
+				}				
+			}
+			if (project_exist == false){
+				obj = {
+					project: recordProject,
+					duration: recordDuration,
+					index: array.length
+				};
+				array.push(obj);
+			}
+		}
+		return obj;
+	},
+	_convertDurationToDecimalDuration: function(time){ // 36:40:00 ==> 36.66		
+		var splitTime= time.split(':');
+		var hours      = splitTime[0];
+		var minutes    = splitTime[1];
+		var seconds    = splitTime[2];
+
+		var decimalMinutes = minutes/60;
+		if (hours.length == 2 && hours[0] == 0){
+			hours = hours[1];
+		}		
+		var decimalDuration = parseInt(hours)  + decimalMinutes; 		
+		return decimalDuration;
+	},
+	_calcSeconds: function(sec1,sec2){
+		var secTotal = parseInt(sec1,10) + parseInt(sec2,10);		
+		var r = 0;
+		var obj = {};
+
+		if (secTotal >= 60){		
+			r = 1;
+			secTotal = secTotal - 60;
+
+		}
+		obj.totalSec = secTotal;
+		obj.remainder = r;
+		return obj;
+	},
+	_calcMinutes: function(min1,min2){
+		var minTotal =  parseInt(min1,10) + parseInt(min2,10);
+		var r = 0;
+		var obj = {};
+
+		if (minTotal >= 60){
+			r = 1;
+			minTotal = minTotal - 60;
+		}
+		obj.totalMin = minTotal;
+		obj.remainder = r;		 
+		return obj;
+	},
+	_getYear: function(date) {
+		var gdt = new GlideDateTime(date);
+		var holdYear = gdt.getYearLocalTime();
+		return holdYear;
+	},
+	_getMonth: function(date) {
+		var gdt = new GlideDateTime(date);
+		var holdMonth = gdt.getMonthLocalTime().toString();
+		if (holdMonth.length == 1) {
+			holdMonth = '0' + holdMonth;
+		}
+		return holdMonth;
+	},
+	_getDay: function(date) {
+		var gdt = new GlideDateTime(date);
+		var holdMonth = gdt.getDayOfMonthLocalTime();
+		return holdMonth;
+	},
+	GetCompanyCodeByCompany: function(company){
+		var company_codes = "sys_idIN";
+		var gr = new GlideRecord("company_code");
+		gr.addEncodedQuery("company=" + company);
+		gr.query();
+		while (gr.next()) {
+			company_codes += gr.sys_id + ",";
+		}
+		return company_codes;
+	},
+	getUserCompanyCodes: function(user){
+		var companyCodes = '';
+
+		var rec = new GlideRecord('pm_project');
+		rec.addEncodedQuery("short_descriptionLIKEDicomano");
+		rec.query();
+		while(rec.next()){
+			companyCodes += rec.sys_id + ",";
+		} 
+
+
+		var gr = new GlideRecord("sys_user");
+		gr.addQuery("sys_id", user);
+		gr.query();
+		if (gr.next()) {
+			companyCodes += gr.getValue('company_code'); 
+		}			
+
+		return companyCodes;
+
+	},
+	getUserDefaultProject: function(user){
+		var project = {	};
+		project.sysID = "";
+		project.displayValue = "";
+
+		var query = "default_projectISNOTEMPTY^sys_id=" + user;		
+		var gr = new GlideRecord("sys_user");
+		gr.addEncodedQuery(query);
+		gr.query();
+		if (gr.next()) {
+			project.sysID        = gr.getValue('default_project'); 
+			project.displayValue = gr.getDisplayValue('default_project');
+		}
+		return project;
+	},
+	getUserDefaultProjectBackend: function(){		
+		var project = '';
+		var gr = new GlideRecord("sys_user");
+		gr.addQuery("sys_id", gs.getUserID());
+		gr.query();
+		if (gr.next()) {
+			project = gr.getValue('default_project'); 			
+		}
+		return project;
+	},
+
+    type: 'HoursReportUtils'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>gaia</sys_created_by>
+        <sys_created_on>2022-08-21 21:01:58</sys_created_on>
+        <sys_id>b455df881ba119108b5d117c0a4bcbc5</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>HoursReportUtils</sys_name>
+        <sys_package display_value="Hours report" source="x_dila_hours_repor">f53169041b6dd5108b5d117c0a4bcb34</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="Hours report">f53169041b6dd5108b5d117c0a4bcb34</sys_scope>
+        <sys_update_name>sys_script_include_b455df881ba119108b5d117c0a4bcbc5</sys_update_name>
+        <sys_updated_by>gaia</sys_updated_by>
+        <sys_updated_on>2022-08-22 13:11:29</sys_updated_on>
+    </sys_script_include>
+</record_update>

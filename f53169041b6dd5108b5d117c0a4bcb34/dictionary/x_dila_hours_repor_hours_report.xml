@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element label="Hours Report" max_length="40" name="x_dila_hours_repor_hours_report" sizeclass="0" type="collection">
+        <element attributes="edge_encryption_enabled=true" label="Actual End" max_length="40" name="actual_end" type="glide_date_time"/>
+        <element attributes="edge_encryption_enabled=true" label="Actual Start" max_length="40" name="actual_start" type="glide_date_time"/>
+        <element attributes="edge_encryption_enabled=true" label="Comments" max_length="200" name="comments" type="string"/>
+        <element attributes="edge_encryption_enabled=true" label="Day" max_length="40" name="day" type="glide_date"/>
+        <element label="Duration" max_length="40" name="duration" read_only="true" type="glide_duration"/>
+        <element label="Duration(Time)" max_length="40" name="duration_time" type="glide_time"/>
+        <element label="End Time" max_length="40" name="end_time" type="glide_time"/>
+        <element attributes="encode_utf8=false" label="Project" max_length="32" name="project" reference="customer_project" type="reference"/>
+        <element label="Record closed" max_length="40" name="record_closed" type="boolean"/>
+        <element label="Start Time" max_length="40" name="start_time" type="glide_time"/>
+        <element attributes="encode_utf8=false" label="User" max_length="32" name="user" reference="sys_user" type="reference"/>
+        <index name="index">
+            <element name="project"/>
+        </index>
+        <index name="index2">
+            <element name="user"/>
+        </index>
+    </element>
+</database>

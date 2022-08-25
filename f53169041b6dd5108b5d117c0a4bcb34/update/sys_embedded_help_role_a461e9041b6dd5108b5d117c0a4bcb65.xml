@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_embedded_help_role">
+    <sys_embedded_help_role action="INSERT_OR_UPDATE">
+        <order>1000</order>
+        <role display_value="x_dila_hours_repor.hours_report_fulfiller" name="x_dila_hours_repor.hours_report_fulfiller">e461e9041b6dd5108b5d117c0a4bcb64</role>
+        <sys_class_name>sys_embedded_help_role</sys_class_name>
+        <sys_created_by>gaia</sys_created_by>
+        <sys_created_on>2022-08-21 12:33:53</sys_created_on>
+        <sys_id>a461e9041b6dd5108b5d117c0a4bcb65</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>e461e9041b6dd5108b5d117c0a4bcb64</sys_name>
+        <sys_package display_value="Hours report" source="x_dila_hours_repor">f53169041b6dd5108b5d117c0a4bcb34</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Hours report">f53169041b6dd5108b5d117c0a4bcb34</sys_scope>
+        <sys_update_name>sys_embedded_help_role_a461e9041b6dd5108b5d117c0a4bcb65</sys_update_name>
+        <sys_updated_by>gaia</sys_updated_by>
+        <sys_updated_on>2022-08-21 12:33:53</sys_updated_on>
+    </sys_embedded_help_role>
+</record_update>

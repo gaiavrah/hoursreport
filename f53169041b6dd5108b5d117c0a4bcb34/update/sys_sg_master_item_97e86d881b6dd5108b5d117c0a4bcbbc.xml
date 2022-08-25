@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_sg_master_item">
+    <sys_sg_master_item action="INSERT_OR_UPDATE">
+        <condition_order/>
+        <datasource_table>x_dila_hours_repor_hours_report_excel_attachments</datasource_table>
+        <datasource_table_condition/>
+        <embedded_screen display_value="Hours report excel attachments Form Screen">dbe86d881b6dd5108b5d117c0a4bcbb9</embedded_screen>
+        <item_view/>
+        <name>Hours report excel attachments master_item</name>
+        <sys_class_name>sys_sg_master_item</sys_class_name>
+        <sys_created_by>gaia</sys_created_by>
+        <sys_created_on>2022-08-21 13:06:50</sys_created_on>
+        <sys_id>97e86d881b6dd5108b5d117c0a4bcbbc</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Hours report excel attachments master_item</sys_name>
+        <sys_package display_value="Hours report" source="x_dila_hours_repor">f53169041b6dd5108b5d117c0a4bcb34</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Hours report">f53169041b6dd5108b5d117c0a4bcb34</sys_scope>
+        <sys_update_name>sys_sg_master_item_97e86d881b6dd5108b5d117c0a4bcbbc</sys_update_name>
+        <sys_updated_by>gaia</sys_updated_by>
+        <sys_updated_on>2022-08-21 13:06:50</sys_updated_on>
+        <use_view_config>true</use_view_config>
+        <view_config display_value="Hours report excel attachments List Screen View Config">4be86d881b6dd5108b5d117c0a4bcbb0</view_config>
+    </sys_sg_master_item>
+</record_update>

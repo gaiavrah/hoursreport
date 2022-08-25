@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element label="Hours report excel attachments" max_length="40" name="x_dila_hours_repor_hours_report_excel_attachments" sizeclass="0" type="collection">
+        <element attributes="edge_encryption_enabled=true" label="Title" max_length="80" name="title" type="string"/>
+    </element>
+</database>

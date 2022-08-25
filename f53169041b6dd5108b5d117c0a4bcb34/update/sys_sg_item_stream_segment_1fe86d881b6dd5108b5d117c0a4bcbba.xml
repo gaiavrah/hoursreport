@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_sg_item_stream_segment">
+    <sys_sg_item_stream_segment action="INSERT_OR_UPDATE">
+        <empty_state/>
+        <interleave_order_direction>asc</interleave_order_direction>
+        <max_offline_rows>1000</max_offline_rows>
+        <name>Hours report excel attachments Item Stream Segment</name>
+        <order>0</order>
+        <screen display_value="Hours report excel attachments">93e86d881b6dd5108b5d117c0a4bcbb9</screen>
+        <sys_class_name>sys_sg_item_stream_segment</sys_class_name>
+        <sys_created_by>gaia</sys_created_by>
+        <sys_created_on>2022-08-21 13:06:50</sys_created_on>
+        <sys_id>1fe86d881b6dd5108b5d117c0a4bcbba</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Hours report excel attachments Item Stream Segment</sys_name>
+        <sys_package display_value="Hours report" source="x_dila_hours_repor">f53169041b6dd5108b5d117c0a4bcb34</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Hours report">f53169041b6dd5108b5d117c0a4bcb34</sys_scope>
+        <sys_update_name>sys_sg_item_stream_segment_1fe86d881b6dd5108b5d117c0a4bcbba</sys_update_name>
+        <sys_updated_by>gaia</sys_updated_by>
+        <sys_updated_on>2022-08-21 13:06:50</sys_updated_on>
+    </sys_sg_item_stream_segment>
+</record_update>

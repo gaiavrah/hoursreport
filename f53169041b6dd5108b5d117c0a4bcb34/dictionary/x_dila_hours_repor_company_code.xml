@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element label="Company Code" max_length="40" name="x_dila_hours_repor_company_code" sizeclass="0" type="collection">
+        <element attributes="encode_utf8=false" label="Company" max_length="32" name="company" reference="core_company" type="reference"/>
+        <element attributes="edge_encryption_enabled=true" label="Company Code" max_length="40" name="company_code" type="string"/>
+        <index name="index">
+            <element name="company"/>
+        </index>
+    </element>
+</database>

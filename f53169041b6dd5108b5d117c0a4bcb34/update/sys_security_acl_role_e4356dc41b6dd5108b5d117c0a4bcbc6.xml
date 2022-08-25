@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_security_acl_role">
+    <sys_security_acl_role action="INSERT_OR_UPDATE">
+        <sys_class_name>sys_security_acl_role</sys_class_name>
+        <sys_created_by>gaia</sys_created_by>
+        <sys_created_on>2022-08-21 12:50:33</sys_created_on>
+        <sys_id>e4356dc41b6dd5108b5d117c0a4bcbc6</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>x_dila_hours_repor_hours_report.x_dila_hours_repor.hours_report_fulfiller</sys_name>
+        <sys_package display_value="Hours report" source="x_dila_hours_repor">f53169041b6dd5108b5d117c0a4bcb34</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Hours report">f53169041b6dd5108b5d117c0a4bcb34</sys_scope>
+        <sys_security_acl display_value="x_dila_hours_repor_hours_report">e4356dc41b6dd5108b5d117c0a4bcbaa</sys_security_acl>
+        <sys_update_name>sys_security_acl_role_e4356dc41b6dd5108b5d117c0a4bcbc6</sys_update_name>
+        <sys_updated_by>gaia</sys_updated_by>
+        <sys_updated_on>2022-08-21 12:50:33</sys_updated_on>
+        <sys_user_role display_value="x_dila_hours_repor.hours_report_fulfiller" name="x_dila_hours_repor.hours_report_fulfiller">e461e9041b6dd5108b5d117c0a4bcb64</sys_user_role>
+        <transaction_id/>
+    </sys_security_acl_role>
+</record_update>

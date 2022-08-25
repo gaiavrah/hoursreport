@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update>
+    <sys_choice action="INSERT_OR_UPDATE" field="year" table="x_dila_hours_repor_hours_report_closed_by_company_code" version="3">
+        <sys_choice_set action="INSERT_OR_UPDATE">
+            <element>year</element>
+            <name>x_dila_hours_repor_hours_report_closed_by_company_code</name>
+            <sys_class_name>sys_choice_set</sys_class_name>
+            <sys_created_by>gaia</sys_created_by>
+            <sys_created_on>2022-08-21 12:58:49</sys_created_on>
+            <sys_id>7517e1481b6dd5108b5d117c0a4bcbf6</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>year</sys_name>
+            <sys_package display_value="Hours report" source="x_dila_hours_repor">f53169041b6dd5108b5d117c0a4bcb34</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="Hours report">f53169041b6dd5108b5d117c0a4bcb34</sys_scope>
+            <sys_update_name>sys_choice_x_dila_hours_repor_hours_report_closed_by_company_code_year</sys_update_name>
+            <sys_updated_by>gaia</sys_updated_by>
+            <sys_updated_on>2022-08-21 12:58:49</sys_updated_on>
+        </sys_choice_set>
+        <sys_choice action="INSERT_OR_UPDATE">
+            <dependent_value/>
+            <element>year</element>
+            <hint/>
+            <inactive>false</inactive>
+            <label>2021</label>
+            <language>en</language>
+            <name>x_dila_hours_repor_hours_report_closed_by_company_code</name>
+            <sequence/>
+            <synonyms/>
+            <sys_created_by>gaia</sys_created_by>
+            <sys_created_on>2022-08-21 12:58:48</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>3d17e1481b6dd5108b5d117c0a4bcbf5</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>gaia</sys_updated_by>
+            <sys_updated_on>2022-08-21 12:58:48</sys_updated_on>
+            <value>2021</value>
+        </sys_choice>
+        <sys_choice action="INSERT_OR_UPDATE">
+            <dependent_value/>
+            <element>year</element>
+            <hint/>
+            <inactive>false</inactive>
+            <label>2022</label>
+            <language>en</language>
+            <name>x_dila_hours_repor_hours_report_closed_by_company_code</name>
+            <sequence/>
+            <synonyms/>
+            <sys_created_by>gaia</sys_created_by>
+            <sys_created_on>2022-08-21 12:58:49</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>b117e1481b6dd5108b5d117c0a4bcbf9</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>gaia</sys_updated_by>
+            <sys_updated_on>2022-08-21 12:58:49</sys_updated_on>
+            <value>2022</value>
+        </sys_choice>
+    </sys_choice>
+</record_update>

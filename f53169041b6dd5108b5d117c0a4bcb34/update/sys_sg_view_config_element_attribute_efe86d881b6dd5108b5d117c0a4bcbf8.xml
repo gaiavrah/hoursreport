@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_sg_view_config_element_attribute">
+    <sys_sg_view_config_element_attribute action="INSERT_OR_UPDATE">
+        <description/>
+        <name display_value="FieldLabel">c90fd1c2b7321010df65f6efce11a9d2</name>
+        <sys_class_name>sys_sg_view_config_element_attribute</sys_class_name>
+        <sys_created_by>gaia</sys_created_by>
+        <sys_created_on>2022-08-21 13:06:51</sys_created_on>
+        <sys_id>efe86d881b6dd5108b5d117c0a4bcbf8</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>c90fd1c2b7321010df65f6efce11a9d2</sys_name>
+        <sys_package display_value="Hours report" source="x_dila_hours_repor">f53169041b6dd5108b5d117c0a4bcb34</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Hours report">f53169041b6dd5108b5d117c0a4bcb34</sys_scope>
+        <sys_update_name>sys_sg_view_config_element_attribute_efe86d881b6dd5108b5d117c0a4bcbf8</sys_update_name>
+        <sys_updated_by>gaia</sys_updated_by>
+        <sys_updated_on>2022-08-21 13:06:51</sys_updated_on>
+        <translated_value/>
+        <value>total_projects</value>
+        <view_config_element display_value="total_projects-FieldLabel">27e86d881b6dd5108b5d117c0a4bcbf7</view_config_element>
+    </sys_sg_view_config_element_attribute>
+</record_update>

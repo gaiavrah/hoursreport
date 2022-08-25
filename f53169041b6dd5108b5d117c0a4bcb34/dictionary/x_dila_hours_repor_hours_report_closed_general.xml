@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element label="Hours report closed general" max_length="40" name="x_dila_hours_repor_hours_report_closed_general" sizeclass="0" type="collection">
+        <element attributes="edge_encryption_enabled=true" choice="1" label="Month" max_length="40" name="month" read_only="true" type="choice">
+            <choice>
+                <element inactive_on_update="false" label="1" value="1"/>
+                <element inactive_on_update="false" label="10" value="10"/>
+                <element inactive_on_update="false" label="11" value="11"/>
+                <element inactive_on_update="false" label="12" value="12"/>
+                <element inactive_on_update="false" label="2" value="2"/>
+                <element inactive_on_update="false" label="3" value="3"/>
+                <element inactive_on_update="false" label="4" value="4"/>
+                <element inactive_on_update="false" label="5" value="5"/>
+                <element inactive_on_update="false" label="6" value="6"/>
+                <element inactive_on_update="false" label="7" value="7"/>
+                <element inactive_on_update="false" label="8" value="8"/>
+                <element inactive_on_update="false" label="9" value="9"/>
+            </choice>
+        </element>
+        <element label="Month closed" max_length="40" name="month_closed" read_only="true" type="boolean"/>
+        <element label="Total days" max_length="40" name="total_days" read_only="true" type="integer"/>
+        <element label="Total hours (Decimal)" max_length="15" name="total_hours_decimal" read_only="true" type="decimal"/>
+        <element label="Total projects" max_length="40" name="total_projects" read_only="true" type="integer"/>
+        <element attributes="encode_utf8=false" label="User" max_length="32" name="user" read_only="true" reference="sys_user" type="reference"/>
+        <element attributes="edge_encryption_enabled=true" choice="1" label="Year" max_length="40" name="year" read_only="true" type="choice">
+            <choice>
+                <element inactive_on_update="false" label="2021" value="2021"/>
+                <element inactive_on_update="false" label="2022" value="2022"/>
+            </choice>
+        </element>
+        <index name="index">
+            <element name="user"/>
+        </index>
+    </element>
+</database>
