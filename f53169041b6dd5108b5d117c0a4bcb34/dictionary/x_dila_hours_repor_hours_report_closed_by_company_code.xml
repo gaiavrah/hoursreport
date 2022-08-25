@@ -16,7 +16,7 @@
                 <element inactive_on_update="false" label="9" value="9"/>
             </choice>
         </element>
-        <element attributes="encode_utf8=false" label="Project" max_length="32" name="project" read_only="true" reference="pm_project" type="reference"/>
+        <element attributes="encode_utf8=false" label="Project" max_length="32" name="project" reference="pm_project" type="reference"/>
         <element label="Total hours (Decimal)" max_length="15" name="total_hours_decimal" read_only="true" type="decimal"/>
         <element attributes="encode_utf8=false" label="User" max_length="32" name="user" read_only="true" reference="sys_user" type="reference"/>
         <element attributes="edge_encryption_enabled=true" choice="1" label="Year" max_length="40" name="year" read_only="true" type="choice">
