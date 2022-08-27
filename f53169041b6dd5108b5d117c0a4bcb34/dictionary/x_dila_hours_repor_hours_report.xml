@@ -2,7 +2,7 @@
     <element label="Hours Report" max_length="40" name="x_dila_hours_repor_hours_report" sizeclass="0" type="collection">
         <element attributes="edge_encryption_enabled=true" label="Actual End" max_length="40" name="actual_end" type="glide_date_time"/>
         <element attributes="edge_encryption_enabled=true" label="Actual Start" max_length="40" name="actual_start" type="glide_date_time"/>
-        <element attributes="edge_encryption_enabled=true" default="9" label="Comments" max_length="200" name="comments" type="string"/>
+        <element attributes="edge_encryption_enabled=true" default="8" label="Comments" max_length="200" name="comments" type="string"/>
         <element attributes="edge_encryption_enabled=true" label="Day" max_length="40" name="day" type="glide_date"/>
         <element label="Duration" max_length="40" name="duration" read_only="true" type="glide_duration"/>
         <element label="Duration(Time)" max_length="40" name="duration_time" type="glide_time"/>
