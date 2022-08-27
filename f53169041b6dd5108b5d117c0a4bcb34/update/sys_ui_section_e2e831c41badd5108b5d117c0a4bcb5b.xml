@@ -154,6 +154,20 @@
             <sys_user/>
             <type/>
         </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>test_2</element>
+            <position>11</position>
+            <sys_created_by>gaia</sys_created_by>
+            <sys_created_on>2022-08-27 23:12:46</sys_created_on>
+            <sys_id>b92dea4a1bed5d108b5d117c0a4bcb57</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="NULL" display_value="" name="x_dila_hours_repor_hours_report" sys_domain="global" view="Default view">e2e831c41badd5108b5d117c0a4bcb5b</sys_ui_section>
+            <sys_updated_by>gaia</sys_updated_by>
+            <sys_updated_on>2022-08-27 23:12:46</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
         <sys_ui_section action="INSERT_OR_UPDATE">
             <caption/>
             <header>false</header>

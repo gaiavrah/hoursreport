@@ -10,6 +10,7 @@
         <element attributes="encode_utf8=false" label="Project" max_length="32" name="project" reference="customer_project" type="reference"/>
         <element label="Record closed" max_length="40" name="record_closed" type="boolean"/>
         <element label="Start Time" max_length="40" name="start_time" type="glide_time"/>
+        <element label="Test 2" max_length="80" name="test_2" type="string"/>
         <element attributes="encode_utf8=false" label="User" max_length="32" name="user" reference="sys_user" type="reference"/>
         <index name="index">
             <element name="project"/>
