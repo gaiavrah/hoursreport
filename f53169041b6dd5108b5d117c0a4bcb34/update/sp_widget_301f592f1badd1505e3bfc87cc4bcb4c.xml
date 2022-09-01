@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[function($scope,nowAttachmentHandler, $timeout, $rootScope, moment, $location, calendarEventTitle,spUtil,spModal,spAriaUtil,$document,snAttachmentHandler) {
+	// See https://mattlewis92.github.io/angular-bootstrap-calendar
+	var vm = this;
+	var c = this;
+	$scope.closeMonthFirstLoad = false;	
+	vm.closeMonthDisable = closeCurrentMonthCondition();		
+	vm.events = vm.options.events || [];
+
+
+	function setupAttachmentHandler(){
+		$scope.attachmentHandler = new nowAttachmentHandler(attachSuccess, appendError); function attachSuccess() {
+			$rootScope.$broadcast("sp.attachments.update", 'ed306ba11bd881107c69319acd4bcb0e');
+			spAriaUtil.sendLiveMessage("Attachment added");
+		} function appendError(error) {
+			spUtil.addErrorMessage(error.msg + error.fileName);
+			$scope.errorMessages.push(error);
+			spAriaUtil.sendLiveMessage("Failed to add attachment");
+		} $timeout(function() {			
+			$scope.attachmentHandler.setParams('u_hours_report', 'ed306ba11bd881107c69319acd4bcb0e', 1024 * 1024 * 24);
+		})
+	}
+	setupAttachmentHandler();
+
+	function setAttachments(attachments, action) {
+		if ($scope.submitting == true)
+			return;
+
+		attachments.forEach(function(attachment) {
+			attachment.canDelete = !isReadonlyMode;
+			attachment.canWrite = !isReadonlyMode;
+		});
+
+		$scope.attachments = attachments;
+		if (!action)
+			return;
+
+		if (action === "added") {
+			spAriaUtil.sendLiveMessage($scope.data.attachmentSuccessMsg);
+		}
+	}
+	function closeCurrentMonthCondition(){		
+		var ga = new GlideAjax('global.HoursReportFunctionsClient');
+		ga.addParam('sysparm_name', 'checkIfPreviousMonthIsClosed');			
+		ga.getXMLAnswer(function(response) {
+			
+			$scope.closeMonthFirstLoad = true;		
+			if (response == 'false'){						
+				vm.closeMonthDisable = true;
+			}	
+			if (response == 'true'){								
+				vm.closeMonthDisable = false;
+			}			
+		
+			return vm.closeMonthDisable;
+						
+		});		
+		return vm.closeMonthDisable;
+	}
+	
+	
+
+	vm.closeMonthCondition = function(date){					
+		var ga = new GlideAjax('global.HoursReportFunctionsClient');
+		ga.addParam('sysparm_name', 'checkIfMonthIsClosed');			
+		ga.addParam('sysparm_date',date);
+		ga.getXMLAnswer(function(response) {
+			
+			$scope.closeMonthFirstLoad = true;		
+			if (response == 'false'){						
+				vm.closeMonthDisable = true;
+			}	
+			if (response == 'true'){								
+				vm.closeMonthDisable = false;
+			}						
+			return vm.closeMonthDisable;
+						
+			
+		});		
+		return vm.closeMonthDisable;
+
+	}
+
+	vm.closeMonth = function(){			
+		spModal.confirm("Are you sure you want to close this month?").then(function(confirmed){
+			if(confirmed){
+				vm.closeMonthDisable = true;
+				c.data.action = "close_month";
+				c.data.date = vm.viewDate;
+				$scope.server.update();
+			}
+		});
+
+	}
+	$scope.$evalAsync(function() {
+		$scope.attachmentHandler.setParams('u_hours_report', 'ed306ba11bd881107c69319acd4bcb0e', 1024 * 1024 * 24);
+		$scope.attachmentHandler.getAttachmentList();
+	});
+
+
+	$scope.$on('attachment.updated', function(evt,options) {		
+		if ($scope.data.sys_id != -1 && options.sys_id == $scope.data.sys_id)
+			updateAttachmentState($scope.data.table, $scope.data.sys_id);
+	});
+
+	function updateAttachmentState(table, sys_id) {		
+		c.server.update().then(function (data) {
+			if (!data.stream || !data.stream.entries)
+				return;
+			var newEntries = data.stream.entries;
+			var currEntries = $scope.data.mergedEntries;
+			var oldSize = currEntries ? currEntries.length : 0;
+			var newSize = newEntries.length;
+			for (var i = 0; i < oldSize; i++) {
+				if (!currEntries[i].attachment)
+					continue;
+				for (var j = 0; j < newSize; j++) {
+					if (currEntries[i].sys_id == newEntries[j].sys_id && newEntries[j].attachment) {
+						currEntries[i].attachment.state = newEntries[j].attachment.state;
+						break;
+					}
+				}
+			}
+		});
+	}
+
+	$scope.scanAttachment = function(attachment){		
+		snAttachmentHandler.scanAttachment(attachment);
+	}
+
+	$scope.$on("attachment.upload.start", function() {		
+		$scope.data.isPosting = true;
+		$scope.msg = $scope.data.uploadingAttachmentMsg;
+	})
+
+	$scope.$on("attachment.upload.stop", function() {		
+		$scope.data.isPosting = false;
+		$scope.msg = "";
+		//update the stream so we get the new attachment
+		spUtil.update($scope).then(function(r) {
+			$scope.data.stream = r.stream;
+		});
+	});
+
+
+	vm.events.forEach(function(x){
+		x.startsAt = new Date(x.startsAt);
+		x.endsAt = new Date(x.endsAt);
+	});
+
+	var hash = getHash();
+
+	vm.calendarView = hash.calendarView || vm.options.default_calendar_view || 'month';
+	// See https://mattlewis92.github.io/angular-bootstrap-calendar
+
+	// Pass this dependency that is injected by the angular boostrap calendar module to
+	// the scope so that any calling widgets can access it
+	vm.calendarEventTitle = calendarEventTitle;
+
+
+	vm.customTemplateUrls = vm.data.customTemplateUrls;
+
+	if(!vm.options.start_date){
+		if(vm.calendarView == 'month'){
+			vm.viewDate = moment().startOf('month').toDate();
+		} else {
+			vm.viewDate = new Date(); // Today
+		}
+	} else {
+		vm.viewDate = new Date(vm.options.start_date);
+	}
+	
+	vm.hiddenButtons = [];
+
+	vm.getViewDateTitle = function (){
+		var viewFormats = {
+			year: 'YYYY',
+			month: 'MMM YYYY',
+			week: 'MMM YYYY',
+			day: 'MM/DD/YYYY'
+		};
+		return moment(vm.viewDate).format(viewFormats[vm.calendarView]);
+	}
+
+	$scope.$watchGroup(['vm.calendarView','vm.viewDate','vm.totalHours','vm.totalHoursUpdated'], function(){
+		vm.viewDateTitle = vm.getViewDateTitle();		
+		$scope.server.get({
+			action:'test_server',
+			date: vm.viewDate
+		}).then(function(response) {			
+			vm.monthlyReportByProject = response.data.monthlyReportByProject;
+			vm.totalHoursUpdated = false;
+		});
+
+		// Put the view in the browser hash so that it can be bookmarked
+		var hash = getHash();
+		hash.calendarView = vm.calendarView;
+		var hashString = Object.keys(hash).map(function(key){ return key + '=' + hash[key]; }).join('&');
+		$location.hash(hashString);
+	});
+
+	// Use this to interact with a containing widget
+	// Implement $rootScope.$on in the calling widget and you can do all of the
+	// activities you can do with "vm." in the Matt's sample code such as overriding
+	// text of event display and subscribing to events like click
+	$rootScope.$broadcast('angular-bootstrap-calendar-init', vm);
+
+	function getHash(){
+		var hash = $location.hash().split('&').reduce(function(obj, x){
+			var pieces = x.split('=');
+			if(pieces[0]){
+				obj[pieces[0]] = pieces[1] || '';
+			}
+			return obj;
+		}, {});
+
+		return hash;
+	}
+}
+]]></client_script>
+        <controller_as>c</controller_as>
+        <css>.popover-title {&#13;
+  background-color:white;  &#13;
+}&#13;
+.popover-content {&#13;
+width: 200px;&#13;
+}&#13;
+.close-month-btn{&#13;
+  background-color:#4682B4 !important;&#13;
+  color:white !important;&#13;
+  opacity: 1 !important;&#13;
+}&#13;
+.total-value{&#13;
+  padding-left: 10px;&#13;
+}&#13;
+td{&#13;
+ padding-left: 10px; &#13;
+}&#13;
+.table-top{&#13;
+  margin-top: 1%;&#13;
+}&#13;
+.gaia-class{&#13;
+  &#13;
+}&#13;
+  </css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id>bootstrap_calendar_app</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {
+  
+}]]></link>
+        <name>Bootstrap Calendar</name>
+        <option_schema/>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function() {
+	// See https://mattlewis92.github.io/angular-bootstrap-calendar
+
+	var gdt = new GlideDateTime(gs.now()); //December
+	var month_value = gdt.getMonthLocalTime();
+	var year_value = gdt.getYear();
+
+
+	data.closeMonthDisableOnLoad = checkIfMonthCloseByYearAndMonth(gs.getUserID(),year_value,month_value);	
+  
+	
+	var events = [];	
+
+	var gr = new GlideRecord('u_hours_report');
+	gr.addQuery("u_user", gs.getUserID());
+	gr.orderBy('u_day');
+	gr.query();
+	while (gr.next()) {
+		var event = {
+			//'CompanyCode': gr.u_company_code.getDisplayValue(),
+			//'CompanyCodeRef': gr.u_company_code_ref.getDisplayValue(),
+			//'CompanyCodeRefSysID': gr.u_company_code_ref.sys_id.getDisplayValue(),
+			'CompanyCodeRef': gr.u_project.getDisplayValue(),
+			'CompanyCodeRefSysID': gr.u_project.sys_id.getDisplayValue(),
+			'startsAt': gr.u_actual_start.getDisplayValue(),
+			'endsAt': gr.u_actual_end.getDisplayValue(),
+			'startsAt2': gr.u_start_time.getDisplayValue(),
+			'endsAt2': gr.u_end_time.getDisplayValue(),
+			'sysID': gr.sys_id.getDisplayValue(),
+			'Company': gr.u_company.getDisplayValue(),
+			'CompanySysID': gr.u_company.sys_id.getDisplayValue(),
+			'StartFormatB': formatDateTimeWithoutTimeB(gr.u_start_time.getDisplayValue()),
+			'EndFormatB': formatDateTimeWithoutTimeB(gr.u_end_time.getDisplayValue()),
+			'comments': gr.u_comments.getDisplayValue(),
+			'recordClosed': gr.u_record_closed.getDisplayValue()
+
+		};				
+		events.push(event);
+	}
+
+	data.eventsArr = [];
+	data.eventsArr = events;
+	var current_user = gs.getUserID();
+	var currentUserName = gs.getUserDisplayName();
+
+	if (input && input.action == "test_server"){		
+		var gdt = new GlideDateTime(input.date);
+		var month_value = gdt.getMonthLocalTime().toString();			
+		var year_value  = gdt.getYearLocalTime().toString();
+
+		var query = "u_user=" + gs.getUserID() + "^u_year=" + year_value +  "^u_month=" + month_value;
+
+		data.monthlyReportByProject = [];
+		var obj;
+		var rec = new GlideRecord("u_hours_report_close_month");
+		rec.addEncodedQuery(query);
+		rec.query();
+		while (rec.next()) {			
+			obj = {			
+				project: rec.u_company_code.getDisplayValue(),
+				totalHours: rec.u_total_hours_decimal.getDisplayValue()
+			};
+			data.monthlyReportByProject.push(obj);
+		}
+	}
+
+	if (input && input.action == "close_month") {
+		var gdt = new GlideDateTime(input.date);
+		var month_value = gdt.getMonthLocalTime().toString();			
+		var year_value  = gdt.getYearLocalTime().toString();
+
+		var closeMonth_si = new HoursReportFunctions(); // script iclude
+		closeMonth_si.closeMonthlyRecords(current_user,month_value,year_value);		
+	}
+
+	function formatDateTimeWithoutTimeB(dateTime) {
+
+		var cdt, rdt, closed, resolved;
+		var temp = new Packages.java.text.SimpleDateFormat("HH:mm:ss"); //This defines the format of input values, check date-time format of field first		
+		var output = new Packages.java.text.SimpleDateFormat('HH:mm'); //Change the date-time format here to what you want		
+		cdt = temp.parse(dateTime);
+		closed = output.format(cdt);
+		return closed;
+
+	}
+
+	if(options.custom_template_urls){
+		if(typeof options.custom_template_urls == 'string'){
+			data.customTemplateUrls = JSON.parse(options.custom_template_urls);
+		} else {
+			data.customTemplateUrls = options.custom_template_urls;
+		}
+	} else {
+		data.customTemplateUrls = '';
+	}
+
+
+	function checkIfMonthCloseByYearAndMonth(user,year,month){			
+		var monthIsClosed = false;
+		var gr = new GlideRecord("u_hours_report_closed_general");
+		var query = "u_user=" +  user + "^u_month=" + month + "^u_year=" + year;
+		gr.addEncodedQuery(query);		
+		gr.query();
+		if (gr.next()) {			
+			monthIsClosed = gr.u_month_closed.getDisplayValue();			
+		}
+		return monthIsClosed;
+	}
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>gaia</sys_created_by>
+        <sys_created_on>2022-09-01 09:38:55</sys_created_on>
+        <sys_id>301f592f1badd1505e3bfc87cc4bcb4c</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Bootstrap Calendar</sys_name>
+        <sys_package display_value="Hours report" source="x_dila_hours_repor">f53169041b6dd5108b5d117c0a4bcb34</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Hours report">f53169041b6dd5108b5d117c0a4bcb34</sys_scope>
+        <sys_update_name>sp_widget_301f592f1badd1505e3bfc87cc4bcb4c</sys_update_name>
+        <sys_updated_by>gaia</sys_updated_by>
+        <sys_updated_on>2022-09-01 09:38:55</sys_updated_on>
+        <template><![CDATA[<div>
+  <div class="row">    
+    <div class="col-md-1 text-center" style="padding-left: 3%;"><button  class="btn close-month-btn" ng-style="{'background-color':c.closeMonthDisabled}" ng-disabled="vm.closeMonthDisable" ng-click="vm.closeMonth()"> Close month </button></div>
+    <div class="col-md-3"> </div>    
+    <div class="col-md-4 text-center"></div>
+  </div> 
+
+
+
+</div>
+<div class="mwlCalendarWrapper" id="{{::vm.options.id}}" ng-show="!vm.hidden">    
+  <ng-include ng-if="vm.options.show_navigation === true" src="'calendarMainControls.html'"></ng-include>   
+  <mwl-calendar
+                events="data.eventsArr"
+                view="vm.calendarView"
+                view-date="vm.viewDate"            
+                custom-template-urls="vm.customTemplateUrls"
+                on-event-click="vm.eventClicked(calendarEvent)"
+                >
+
+  </mwl-calendar>
+  <div class="row">    
+    <table class="table-top">
+      <tr><td>Project:</td><td>Total hours:</td></tr>
+      <th></th>
+      <tr ng-repeat="index in vm.monthlyReportByProject" ng-if="index.totalHours > 0">
+        <td>{{ index.project }}</td>
+        <td style="text-align:center;">{{ index.totalHours }}</td>
+      </tr>
+    </table>
+
+  </div>
+
+</div>]]></template>
+    </sp_widget>
+</record_update>
